@@ -1,31 +1,5 @@
 package com.mesosphere.sdk.helloworld.scheduler;
 
-import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.AbstractFileFilter;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-
 import com.mesosphere.sdk.framework.FrameworkConfig;
 import com.mesosphere.sdk.http.ResponseUtils;
 import com.mesosphere.sdk.offer.LoggingUtils;
@@ -43,6 +17,19 @@ import com.mesosphere.sdk.specification.ServiceSpec;
 import com.mesosphere.sdk.specification.yaml.RawServiceSpec;
 import com.mesosphere.sdk.storage.Persister;
 import com.mesosphere.sdk.storage.PersisterException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * Example implementation of a resource which dynamically adds and removes services from a dynamic multi-scheduler.
@@ -54,7 +41,9 @@ public class ExampleMultiServiceResource {
     private static final Logger LOGGER = LoggingUtils.getLogger(ExampleMultiServiceResource.class);
 
     private static final String YAML_DIR = "hello-world-scheduler/";
+
     private static final String YAML_EXT = ".yml";
+
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     /**
@@ -62,7 +51,9 @@ public class ExampleMultiServiceResource {
      */
     private static class ContextData {
         private final String serviceName;
+
         private final String yamlName;
+
         private final Map<String, String> envOverride;
 
         private ContextData(String serviceName, String yamlName, Map<String, String> envOverride) {
@@ -99,14 +90,16 @@ public class ExampleMultiServiceResource {
     }
 
     private final MultiServiceManager multiServiceManager;
+
     private final ServiceStore serviceStore;
 
     ExampleMultiServiceResource(
-            SchedulerConfig schedulerConfig,
-            FrameworkConfig frameworkConfig,
-            Persister persister,
-            Collection<Scenario.Type> scenarios,
-            MultiServiceManager multiServiceManager) {
+        SchedulerConfig schedulerConfig,
+        FrameworkConfig frameworkConfig,
+        Persister persister,
+        Collection<Scenario.Type> scenarios,
+        MultiServiceManager multiServiceManager)
+    {
         this.multiServiceManager = multiServiceManager;
         ServiceFactory serviceFactory = new ServiceFactory() {
             @Override
@@ -122,16 +115,16 @@ public class ExampleMultiServiceResource {
                 serviceParameters.putAll(contextData.envOverride);
 
                 RawServiceSpec rawServiceSpec =
-                        RawServiceSpec.newBuilder(yamlFile).setEnv(serviceParameters).build();
+                    RawServiceSpec.newBuilder(yamlFile).setEnv(serviceParameters).build();
                 ServiceSpec serviceSpec = DefaultServiceSpec.newGenerator(
-                        rawServiceSpec, schedulerConfig, serviceParameters, yamlFile.getParentFile())
-                        // Override any framework-level params in the servicespec (role, principal, ...) with ours:
-                        .setMultiServiceFrameworkConfig(frameworkConfig)
-                        .build();
+                    rawServiceSpec, schedulerConfig, serviceParameters, yamlFile.getParentFile())
+                    // Override any framework-level params in the servicespec (role, principal, ...) with ours:
+                    .setMultiServiceFrameworkConfig(frameworkConfig)
+                    .build();
 
                 SchedulerBuilder builder = DefaultScheduler.newBuilder(serviceSpec, schedulerConfig, persister)
-                        .setPlansFrom(rawServiceSpec)
-                        .enableMultiService(frameworkConfig.getFrameworkName());
+                    .setPlansFrom(rawServiceSpec)
+                    .enableMultiService(frameworkConfig.getFrameworkName());
                 return Scenario.customize(builder, Optional.of(frameworkConfig.getFrameworkName()), scenarios).build();
             }
         };
@@ -148,14 +141,14 @@ public class ExampleMultiServiceResource {
 
         // Sort names alphabetically:
         Collection<File> files = new TreeSet<>(FileUtils.listFiles(
-                new File(YAML_DIR),
-                new AbstractFileFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(YAML_EXT);
-                    }
-                },
-                null /* do not iterate subdirs */));
+            new File(YAML_DIR),
+            new AbstractFileFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(YAML_EXT);
+                }
+            },
+            null /* do not iterate subdirs */));
         for (File f : files) {
             String name = f.getName();
             // Remove .yml extension in response:
@@ -212,16 +205,17 @@ public class ExampleMultiServiceResource {
 
     /**
      * Accepts a new service to be launched immediately, using the provided example yaml name.
-     *
+     * <p>
      * <p>See {@link #listYamls()} for a list of available yaml files.
      */
     @Path("{serviceName}")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response add(
-            @PathParam("serviceName") String serviceName,
-            @QueryParam("yaml") String yamlName,
-            Map<String, String> envOverride) {
+        @PathParam("serviceName") String serviceName,
+        @QueryParam("yaml") String yamlName,
+        Map<String, String> envOverride)
+    {
         // Create an AbstractScheduler using the specified file, bailing if it doesn't work.
         AbstractScheduler service;
         try {
@@ -229,8 +223,8 @@ public class ExampleMultiServiceResource {
         } catch (Exception e) {
             LOGGER.error("Failed to generate or persist service", e);
             return ResponseUtils.plainResponse(
-                    String.format("Failed to generate or persist service: %s", e.getMessage()),
-                    Response.Status.BAD_REQUEST);
+                String.format("Failed to generate or persist service: %s", e.getMessage()),
+                Response.Status.BAD_REQUEST);
         }
         multiServiceManager.putService(service);
 
@@ -248,7 +242,7 @@ public class ExampleMultiServiceResource {
 
     /**
      * Recovers any previously added service instances and re-adds them to the internal MultiServiceManager.
-     *
+     * <p>
      * <p>Recovery should always be invoked once during startup to rebuild any previously-added services. If no services
      * were active or if this is the initial launch of the scheduler, then this is effectively a no-op.
      */

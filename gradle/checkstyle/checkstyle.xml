@@ -9,23 +9,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-    <property name="severity" value="warning"/>
+    <property name="severity" value="error"/>
 
-
-    <!--Suppression Comments-->
-    <!-- Enable suppression comments -->
     <module name="SuppressWarningsFilter"/>
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="CHECKSTYLE IGNORE\s+(\S+)"/>
-        <property name="onCommentFormat" value="CHECKSTYLE END IGNORE\s+(\S+)"/>
-        <property name="checkFormat" value="$1"/>
-    </module>
-    <module name="SuppressWithNearbyCommentFilter">
-        <!-- Syntax is "SUPPRESS CHECKSTYLE name" -->
-        <property name="commentFormat" value="SUPPRESS CHECKSTYLE (\w+)"/>
-        <property name="checkFormat" value="$1"/>
-        <property name="influenceFormat" value="1"/>
-    </module>
 
     <!--http://checkstyle.sourceforge.net/config_whitespace.html-->
     <module name="FileTabCharacter">
@@ -50,9 +36,17 @@ page at http://checkstyle.sourceforge.net/config.html -->
                   value='All TODOs should be named.  e.g. "TODO (johndoe): Refactor when v2 is released."'/>
     </module>
 
+    <!--Enable if/when we decide all our files can be camelcase only-->
+    <!--<module name="RegexpOnFilename">-->
+        <!--<property name="fileNamePattern" value="^([A-Z]+[a-z0-9]+\.?)+$"/>-->
+        <!--<property name="match" value="false"/>-->
+        <!--<property name="ignoreFileNameExtensions" value="true"/>-->
+    <!--</module>-->
+
     <module name="RegexpOnFilename">
-        <property name="fileNamePattern" value="^([A-Z][a-z0-9]+\.?)+$"/>
-        <property name="ignoreFileNameExtensions" value="true"/>
+        <property name="folderPattern" value="[\\/](src|dist)[\\/]"/>
+        <property name="fileNamePattern" value="\.(java|xml|yml)$"/>
+        <property name="match" value="false"/>
     </module>
 
     <!--http://checkstyle.sourceforge.net/config_sizes.html-->
@@ -73,7 +67,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
 
         <!--http://checkstyle.sourceforge.net/config_blocks.html-->
-        <module name="AvoidNestedBlocks"/>
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
         <module name="EmptyBlock">
             <property name="option" value="TEXT"/>
             <property name="tokens" value="LITERAL_TRY, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_SWITCH"/>
@@ -113,8 +109,36 @@ page at http://checkstyle.sourceforge.net/config.html -->
         </module>
         <module name="VisibilityModifier">
             <property name="packageAllowed" value="true"/>
-            <property name="allowPublicFinalFields" value="true"/>
             <property name="allowPublicImmutableFields" value="true"/>
+        </module>
+
+
+        <!--http://checkstyle.sourceforge.net/config_filters.html-->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE:OFF \s+(\S+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE:ON \s+(\S+)"/>
+            <property name="checkFormat" value="$1"/>
+        </module>
+        <module name="SuppressWithNearbyCommentFilter">
+            <!-- Syntax is "SUPPRESS CHECKSTYLE name" -->
+            <property name="influenceFormat" value="1"/>
+        </module>
+        <module name="SuppressWithNearbyCommentFilter">
+            <property name="commentFormat" value="CHECKSTYLE:OFF THIS LINE"/>
+            <property name="checkFormat" value=".*"/>
+            <property name="influenceFormat" value="0"/>
+        </module>
+        <module name="SuppressWithNearbyCommentFilter">
+            <property name="commentFormat" value="OK to catch (\w+) here"/>
+            <property name="checkFormat" value="IllegalCatchCheck"/>
+            <property name="messageFormat" value="$1"/>
+            <property name="influenceFormat" value="-1"/>
+        </module>
+        <module name="SuppressWithNearbyCommentFilter">
+            <property name="commentFormat"
+                      value="CHECKSTYLE IGNORE (\w+) FOR NEXT (\d+) LINES"/>
+            <property name="checkFormat" value="$1"/>
+            <property name="influenceFormat" value="$2"/>
         </module>
 
 
@@ -139,9 +163,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
                       value="fall through|Fall through|fallthru|Fallthru|falls through|Falls through|
                       fallthrough|Fallthrough|No break|NO break|no break|continue on"/>
         </module>
-        <module name="FinalLocalVariable">
-            <property name="validateEnhancedForLoopVariable" value="true"/>
-        </module>
+        <!--<module name="FinalLocalVariable">-->
+            <!--<property name="validateEnhancedForLoopVariable" value="true"/>-->
+        <!--</module>-->
         <module name="HiddenField">
             <property name="ignoreConstructorParameter" value="true"/>
             <property name="ignoreSetter" value="true"/>
@@ -225,7 +249,8 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
         <!--http://checkstyle.sourceforge.net/config_metrics.html-->
         <module name="CyclomaticComplexity">
-            <property name="max" value="7"/>
+            <!--TODO(takirala): We should have a lower value for this for better readability-->
+            <property name="max" value="15"/>
         </module>
 
 
@@ -233,7 +258,15 @@ page at http://checkstyle.sourceforge.net/config.html -->
         <module name="ArrayTypeStyle"/>
         <module name="AvoidEscapedUnicodeCharacters"/>
         <module name="CommentsIndentation"/>
-        <module name="Indentation"/>
+        <module name="Indentation">
+            <property name="basicOffset" value="2"/>
+            <property name="braceAdjustment" value="0"/>
+            <property name="caseIndent" value="2"/>
+            <property name="throwsIndent" value="4"/>
+            <property name="lineWrappingIndentation" value="4"/>
+            <property name="arrayInitIndent" value="2"/>
+            <property name="forceStrictCondition" value="true"/>
+        </module>
         <module name="OuterTypeFilename"/>
         <module name="TrailingComment"/>
         <module name="UncommentedMain"/>
@@ -375,9 +408,11 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
         <!--http://checkstyle.sourceforge.net/config_sizes.html-->
         <module name="AnonInnerLength"/>
-        <module name="ExecutableStatementCount"/>
+        <module name="ExecutableStatementCount">
+            <property name="max" value="42"/>
+        </module>
         <module name="LineLength">
-            <property name="max" value="${com.puppycrawl.tools.checkstyle.checks.sizes.LineLength.max}" default="120"/>
+            <property name="max" value="${com.puppycrawl.tools.checkstyle.checks.sizes.LineLength.max}" default="100"/>
             <!--
               The default ignore pattern exempts the following elements:
                 - import statements
@@ -393,7 +428,8 @@ page at http://checkstyle.sourceforge.net/config.html -->
         </module>
         <module name="MethodLength">
             <property name="tokens" value="METHOD_DEF"/>
-            <property name="max" value="80"/>
+            <!--TODO(takirala): We should have a lower value for this for better readability-->
+            <property name="max" value="180"/>
         </module>
         <module name="OuterTypeNumber"/>
         <module name="ParameterNumber">
@@ -408,7 +444,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
             <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
         </module>
         <module name="GenericWhitespace"/>
-        <module name="MethodParamPad"/>
+        <module name="MethodParamPad">
+            <property name="allowLineBreaks" value="true"/>
+        </module>
         <module name="NoLineWrap"/>
         <module name="NoWhitespaceAfter">
             <!-- Checks that there is no whitespace after various unary operators.
