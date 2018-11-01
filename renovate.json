@@ -1,1 +1,13 @@
-{}
+{
+  "extends": [
+    "config:base",
+    ":disableRateLimiting"
+  ],
+  "dockerfile": {
+    "fileMatch": ["(^|/)Dockerfile[^/]*$"]
+  },
+  "renovateFork": true,
+  "ignorePaths": [
+    "frameworks/*/universe*/package.json"
+  ]
+}
